@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SumMary In Kind || AI Article Summarizer</title>
+    <style>
+      :root {
+        --accent: #007aff;
+        --accent-glow: 0 0 8px rgba(0, 122, 255, 0.6);
+        --bg: #f5f7fa;
+        --bg-glass: rgba(255, 255, 255, 0.75);
+        --text-primary: #1a1a1a;
+        --text-secondary: #6b7280;
+        --border: rgba(0, 0, 0, 0.08);
+      }
+
+      [data-theme="dark"] {
+        --accent: #34c759;
+        --accent-glow: 0 0 10px rgba(52, 199, 89, 0.55);
+        --bg: #0d1117;
+        --bg-glass: rgba(17, 24, 39, 0.6);
+        --text-primary: #e5e7eb;
+        --text-secondary: #9ca3af;
+        --border: rgba(255, 255, 255, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+        font-family: "Inter", system-ui, -apple-system, sans-serif;
+      }
+
+      .loader {
+        animation: rotate 1s infinite;
+        height: 50px;
+        width: 50px;
+      }
+
+      .loader:before,
+      .loader:after {
+        border-radius: 50%;
+        content: "";
+        display: block;
+        height: 20px;
+        width: 20px;
+      }
+      .loader:before {
+        animation: ball1 1s infinite;
+        background-color: #fff;
+        box-shadow: 30px 0 0 #ff3d00;
+        margin-bottom: 10px;
+      }
+      .loader:after {
+        animation: ball2 1s infinite;
+        background-color: #ff3d00;
+        box-shadow: 30px 0 0 #fff;
+      }
+
+      @keyframes rotate {
+        0% {
+          transform: rotate(0deg) scale(0.8);
+        }
+        50% {
+          transform: rotate(360deg) scale(1.2);
+        }
+        100% {
+          transform: rotate(720deg) scale(0.8);
+        }
+      }
+
+      @keyframes ball1 {
+        0% {
+          box-shadow: 30px 0 0 #ff3d00;
+        }
+        50% {
+          box-shadow: 0 0 0 #ff3d00;
+          margin-bottom: 0;
+          transform: translate(15px, 15px);
+        }
+        100% {
+          box-shadow: 30px 0 0 #ff3d00;
+          margin-bottom: 10px;
+        }
+      }
+
+      @keyframes ball2 {
+        0% {
+          box-shadow: 30px 0 0 #fff;
+        }
+        50% {
+          box-shadow: 0 0 0 #fff;
+          margin-top: -20px;
+          transform: translate(15px, 15px);
+        }
+        100% {
+          box-shadow: 30px 0 0 #fff;
+          margin-top: 0;
+        }
+      }
+
+      body {
+        min-width: 450px;
+        max-width: 800px;
+        background: var(--bg);
+        color: var(--text-primary);
+        padding: 20px 24px;
+        border-radius: 18px;
+        backdrop-filter: blur(12px);
+        transition: background 0.4s ease, color 0.4s ease;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .logo img {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        box-shadow: var(--accent-glow);
+      }
+
+      .logo p {
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: var(--accent);
+        letter-spacing: 0.4px;
+      }
+
+      .links a {
+        text-decoration: none;
+        color: var(--accent);
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+      }
+
+      .links a:hover {
+        text-shadow: var(--accent-glow);
+      }
+
+      h1 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+        text-align: center;
+      }
+
+      p.subtitle {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        text-align: center;
+        margin-bottom: 1.4rem;
+      }
+
+      .card {
+        background: var(--bg-glass);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        padding: 16px;
+        transition: all 0.3s ease;
+      }
+
+      .controls {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 1rem;
+      }
+
+      select,
+      button {
+        padding: 0.55rem 0.9rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        border: 1px solid var(--border);
+        transition: all 0.25s ease;
+      }
+
+      select {
+        background: transparent;
+        color: var(--text-primary);
+        cursor: pointer;
+        min-width: 180px;
+        appearance: none;
+        -webkit-appearance: none;
+      }
+
+      button {
+        background: var(--accent);
+        color: white;
+        border: none;
+        font-weight: 600;
+        box-shadow: var(--accent-glow);
+        cursor: pointer;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 16px rgba(0, 122, 255, 0.5);
+      }
+
+      #CopyBtn {
+        background: transparent;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+      }
+
+      #CopyBtn:hover {
+        background: var(--accent);
+        color: #fff;
+        box-shadow: var(--accent-glow);
+      }
+
+      #result {
+        white-space: pre-wrap;
+        text-align: left;
+        padding: 0.8rem 1rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        background: var(--bg-glass);
+        border: 1px solid var(--border);
+        color: var(--text-primary);
+        max-height: 280px;
+        overflow-y: auto;
+        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.06);
+      }
+
+      #result::-webkit-scrollbar {
+        width: 6px;
+      }
+      #result::-webkit-scrollbar-thumb {
+        background: rgba(128, 128, 128, 0.3);
+        border-radius: 4px;
+      }
+
+      footer {
+        margin-top: 1.2rem;
+        text-align: center;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+      }
+
+      footer a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      footer a:hover {
+        text-shadow: var(--accent-glow);
+      }
+
+      /* Light/Dark auto toggle */
+      @media (prefers-color-scheme: dark) {
+        body:not([data-theme="light"]) {
+          background: var(--bg);
+          color: var(--text-primary);
+        }
+      }
+
+      @keyframes glowFade {
+        0% {
+          box-shadow: var(--accent-glow);
+        }
+        100% {
+          box-shadow: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="logo">
+        <img src="project-logo.svg" alt="Logo" />
+        <p>SumMary In Kind</p>
+      </div>
+      <div class="links">
+        <a href="/options.html" target="_blank">
+          <img src="/settings-svgrepo-com.svg" alt="settings-icon" />
+        </a>
+      </div>
+    </header>
+
+    <main class="card">
+      <h1>AI Article Summarizer</h1>
+      <p class="subtitle">Quick • Accurate • Privacy-Friendly</p>
+
+      <div class="controls">
+        <select id="summary_type">
+          <option value="" disabled selected>Choose summary style</option>
+          <option value="bullet_points">Bullet Points</option>
+          <option value="paragraph">Paragraph</option>
+          <option value="detailed">Detailed Summary</option>
+          <option value="key_takeaways">Key Takeaways</option>
+          <option value="short_summary">Short Summary</option>
+          <option value="long_summary">Long Summary</option>
+          <option value="technical_summary">Technical Summary</option>
+          <option value="non_technical_summary">Non-Technical Summary</option>
+          <option value="executive_summary">Executive Summary</option>
+          <option value="storytelling_style">Storytelling Style</option>
+          <option value="pros_cons_analysis">Pros & Cons</option>
+          <option value="step_by_step_guide">Step-by-Step Guide</option>
+          <option value="timeline_format">Timeline</option>
+        </select>
+
+        <button id="summarizeBtn">Summarize</button>
+        <button id="CopyBtn">Copy</button>
+        <div class="toost" style="display: none; color: #34c759;">Text Copied!!!</div>
+      </div>
+
+      <div id="result">Summary result will appear here...</div>
+    </main>
+
+    <footer>
+      Built by
+      <a href="https://github.com/shirsendumunshi" target="_blank"
+        >Shirsendu Munshi</a
+      >
+      — v1.0
+    </footer>
+
+    <script src="/marked.min.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
